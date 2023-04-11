@@ -48,9 +48,20 @@ class IntelDevice:
         
         Returns: the encoded message
         """
+        encoded = []
+        encoded_message = ""
+        for i in self.msg:
+            ordinal = ord(i)
+            caesar_ordinal = ordinal + self.caesar_shift
+            bitstring = {0:b}.format(caesar_ordinal)
+            encoded.append(bitstring)
+        encoded_message = ''.join(encoded)
+        return 0
+            
 
-        # TODO
-        raise NotImplementedError()
+
+        
+        # raise NotImplementedError()
 
     
     def decode_message(self, msg: str) -> str:
@@ -155,5 +166,4 @@ class IntelDevice:
         if result is None:
             return result
         else:
-            return self.encode_message(self.coordinate_to_location[result])
-        
+            return self.encode_message(self.coordinate_to_location[result]) 
