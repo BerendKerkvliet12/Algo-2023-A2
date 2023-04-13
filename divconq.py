@@ -48,19 +48,23 @@ class IntelDevice:
         
         Returns: the encoded message
         """
-        encoded = []
-        encoded_message = ""
-        for i in self.msg:
-            ordinal = ord(i)
-            caesar_ordinal = ordinal + self.caesar_shift
-            bitstring = {0:b}.format(caesar_ordinal)
-            encoded.append(bitstring)
-        encoded_message = ''.join(encoded)
-        return 0
-            
 
+        # TODO
+        encoded_chars = []
 
-        
+        for char in msg:
+            # Convert the character into its ordinal representation and add the Caesar shift
+            shifted = ord(char) + self.caesar_shift
+
+            # Convert the shifted ordinal representation into a bitstring
+            bitstring = '{0:b}'.format(shifted)
+
+            # Append the bitstring to the list of encoded characters
+            encoded_chars.append(bitstring)
+
+        # Concatenate the bitstrings separated by a space and return the encoded message
+        return ' '.join(encoded_chars)
+    
         # raise NotImplementedError()
 
     
@@ -75,8 +79,19 @@ class IntelDevice:
         Returns: the decoded message
         """
 
-        # TODO
-        raise NotImplementedError()
+        bitstrings = msg.split()
+
+        decoded_chars = []
+
+        for bitstring in bitstrings:
+            num = int(bitstring, 2)
+            shifted_num = num - self.caesar_shift
+            char = chr(shifted_num)
+            decoded_chars.append(char)
+
+        decoded_msg = ''.join(decoded_chars)
+
+        return decoded_msg
 
 
     def fill_coordinate_to_loc(self):
@@ -93,9 +108,19 @@ class IntelDevice:
 
         The function does not return anything. It simply fills the self.coordinate_to_location data structure with the right mapping.
         """
+        self.coordinate_to_location = {}
 
-        # TODO
-        raise NotImplementedError()
+        if not self.enc_locations:
+            return
+
+
+        index = 0
+        for y in range(len(self.loc_grid)):
+            for x in range(len(self.loc_grid[0])):
+                encoded_location = self.enc_locations[index]
+                decoded_location = self.decode_message(encoded_location)
+                self.coordinate_to_location[(y, x)] = decoded_location
+                index = (index + 1) % len(self.enc_locations)
 
     def fill_loc_grid(self):
         """
@@ -110,8 +135,13 @@ class IntelDevice:
         The function does not return anything. It simply fills the self.loc_grid data structure with the decoded codes.
         """
 
-        # TODO
-        raise NotImplementedError()
+        index = 0
+        for y in range(len(self.loc_grid)):
+            for x in range(len(self.loc_grid[0])):
+                encoded_code = self.enc_codes[index]
+                decoded_code = int(self.decode_message(encoded_code))
+                self.loc_grid[y][x] = decoded_code
+                index = (index + 1) % len(self.enc_codes)
 
 
     def divconq_search(self, value: int, x_from: int, x_to: int, y_from: int, y_to: int) -> typing.Tuple[int, int]:
@@ -142,8 +172,25 @@ class IntelDevice:
           A tuple (y,x) specifying the location where the value was found (if the value occurs in the subrectangle)
 
         """
-        # TODO
-        raise NotImplementedError()
+
+        if x_from > x_to or y_from > y_to:
+            return None
+
+        x_mid = (x_from + x_to) // 2
+        y_mid = (y_from + y_to) // 2
+    
+        if self.loc_grid[y_mid][x_mid] == value:
+            return y_mid, x_mid
+        elif self.loc_grid[y_mid][x_mid] > value:
+            result = self.divconq_search(value, x_from, x_mid - 1, y_from, y_to)
+            if result is None:
+                result = self.divconq_search(value, x_mid, x_to, y_from, y_mid - 1)
+        else:
+            result = self.divconq_search(value, x_mid + 1, x_to, y_from, y_to)
+            if result is None:
+                result = self.divconq_search(value, x_from, x_mid, y_mid + 1, y_to)
+    
+        return result
 
     def start_search(self, value) -> str:
         """
@@ -166,4 +213,5 @@ class IntelDevice:
         if result is None:
             return result
         else:
-            return self.encode_message(self.coordinate_to_location[result]) 
+            return self.encode_message(self.coordinate_to_location[result])
+        
